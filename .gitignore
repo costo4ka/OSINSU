@@ -1,40 +1,41 @@
-# --- IDE / Build system ---
+# --- IDE / misc ---
 .idea/
-cmake-build-*/
 
-# --- Build artifacts ---
-*.o
-*.obj
-*.exe
-*.out
-*.dll
-*.so
-*.a
-*.lib
-*.pdb
+# --- CMake build dirs everywhere ---
+**/cmake-build-*/
+**/CMakeFiles/
+**/CMakeCache.txt
+**/cmake_install.cmake
+**/Makefile
+**/Testing/
+**/CMakeScratch/
 
-# --- CLion / CMake temporary ---
-CMakeCache.txt
-CMakeFiles/
-cmake_install.cmake
-Makefile
+# --- Compiled/binary artifacts ---
+**/*.o
+**/*.obj
+**/*.d
+**/*.pdb
+**/*.exe
+**/*.out
+**/*.a
+**/*.so
+**/*.dll
+**/*.lib
 
-# --- System / Windows ---
+# --- Windows alt streams dumped by WSL ---
 *.Zone.Identifier
-*.DS_Store
-Thumbs.db
-desktop.ini
+**/*:Zone.Identifier
 
-# --- Logs and temporary ---
-*.log
-*.tmp
+# --- Common bare executables produced by tasks ---
+**/main
+**/reader
+**/prog
 
-# --- Exclude compiled executables and test binaries ---
-main
-reader
-
-# --- Keep only source and config files ---
-!*.c
-!*.h
-!*.txt
-!CMakeLists.txt
+# --- Keep these (negate above ignores) ---
+!**/*.c
+!**/*.h
+!**/*.txt
+!**/*.pdf
+!**/*.docx
+!**/CMakeLists.txt
+!README.md
