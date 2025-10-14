@@ -2,36 +2,32 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <signal.h>
+#include <sys/mman.h>
 #include <sys/stat.h>
-#include <string.h>
+#include <stdlib.h>
 
-#define MAX_LINES 1024
 
-sig_atomic_t timed_out = 0;
+volatile int timeout = 0;
 
-void handler(int sig) {
-    (void)sig;
-    timed_out = 1;
+void alarm_handler()
+{
+    printf("Время вышло\n");
+    timeout = 1;
+    fclose(stdin);
 }
 
 int main(int argc, const char * argv[])
 {
-    if (argc < 2) {
-        fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
-        return 1;
-    }
+    signal(SIGALRM, alarm_handler);
 
     const int file = open(argv[1], O_RDONLY);
-    if (file == -1) {
-        perror("open");
-        return 1;
-    }
+    if (file == -1)
+        return -1;
 
-    off_t start[MAX_LINES];
-    int lens[MAX_LINES];
+    off_t start[1024], pos = 0;
+    int lens[1024];
     char val;
     int len = 0, str_count = 0;
-    off_t pos = 0;
 
     while (read(file, &val, 1) == 1)
     {
@@ -46,63 +42,43 @@ int main(int argc, const char * argv[])
             lens[str_count] = len;
             len = 0;
             str_count += 1;
-            if (str_count >= MAX_LINES) break; // защита от переполнения
         }
     }
 
-
-    printf("Line\tOffset\tLength\n");
-    for (int i = 0; i < str_count; i++)
-        printf("%d\t%lld\t%d\n", i + 1, (long long)start[i], lens[i] - 2);
-
-    // Настройка сигнала
-    struct sigaction sa;
-    memset(&sa, 0, sizeof(sa));
-    sa.sa_handler = handler;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = 0;
-    if (sigaction(SIGALRM, &sa, NULL) == -1) {
-        perror("sigaction");
-        close(file);
-        return 1;
+    if (len > 0 && str_count < 1024)
+    {
+        lens[str_count] = len;
+        str_count += 1;
     }
 
-    int n;
-    char rez[1024];
+    printf("Line | Offset | Length\n");
+    for (int i = 0; i < str_count; i++)
+        printf("%d\t%lld\t%d\n", i + 1, (long long)start[i], lens[i] - 1);
 
+
+    int n, f = 0;
+    char rez[1025];
+
+    printf("\nВведите номер строки\n");
     while (1)
     {
-        printf("Введите номер строки (0 — выход): ");
-        fflush(stdout);
-
-        timed_out = 0;
-        alarm(5); // 5 секунд на ввод
-
-        if (scanf("%d", &n) != 1 || timed_out)
+        if (f == 0)
+            alarm(5);
+        if (scanf("%d", &n) == 1 && n > 0 && n < str_count + 1)
         {
-            if (timed_out) {
-                printf("\nВремя вышло! Содержимое файла:\n\n");
-                lseek(file, 0, SEEK_SET);
-                char buf[4096];
-                ssize_t bytes;
-                while ((bytes = read(file, buf, sizeof(buf))) > 0) {
-                    write(STDOUT_FILENO, buf, bytes);
+            if (f == 0)
+            {
+                alarm(0);
+                f = 1;
+                if (timeout == 1)
+                {
+                    break;
                 }
-            } else {
-                printf("Введите число - номер существующей строки\n");
-                int c;
-                while ((c = getchar()) != '\n' && c != EOF);
             }
-            break;
-        }
 
-        alarm(0); // отключаем таймер
+            if (n > str_count || n < 0)
+                return -1;
 
-        if (n == 0)
-            break;
-
-        if (n > 0 && n <= str_count)
-        {
             const off_t st = start[n - 1];
             const int l = lens[n - 1];
 
@@ -113,12 +89,35 @@ int main(int argc, const char * argv[])
         }
         else
         {
+            if (timeout == 1 || n == 0)
+                break;
+
+            if (f == 0)
+            {
+                alarm(0);
+                f = 1;
+                if (timeout == 1)
+                {
+                    break;
+                }
+            }
+
             printf("Введите число - номер существующей строки\n");
-            int c;
-            while ((c = getchar()) != '\n' && c != EOF);
+            while (getchar() != '\n');
+        }
+    }
+
+    if (timeout == 1)
+    {
+        for (int i = 0; i < str_count; i++) {
+            lseek(file, start[i], SEEK_SET);
+            read(file, rez, lens[i]);
+            rez[lens[i]] = '\0';
+            printf("%s", rez);
         }
     }
 
     close(file);
+
     return 0;
 }

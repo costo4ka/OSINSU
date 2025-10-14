@@ -33,6 +33,12 @@ int main(int argc, const char * argv[])
             str_count += 1;         // увеличиваем счетчик строк
         }
     }
+    // проверяем, была ли последняя строка без завершающего '\n'
+    if (len > 0)
+    {
+        lens[str_count] = len;  // сохраняем длину последней строки
+        str_count += 1;         // увеличиваем счетчик строк
+    }
 
     // вывод
     printf("Line Offset length\n");
