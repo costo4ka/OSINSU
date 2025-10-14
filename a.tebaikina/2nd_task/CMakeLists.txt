@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.28)
-project(lab2 C)
+project(2nd_task C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(lab2 main.c)
+add_executable(2nd_task main.c)

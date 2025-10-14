@@ -1,0 +1,40 @@
+# --- IDE / Build system ---
+.idea/
+cmake-build-*/
+
+# --- Build artifacts ---
+*.o
+*.obj
+*.exe
+*.out
+*.dll
+*.so
+*.a
+*.lib
+*.pdb
+
+# --- CLion / CMake temporary ---
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# --- System / Windows ---
+*.Zone.Identifier
+*.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Logs and temporary ---
+*.log
+*.tmp
+
+# --- Exclude compiled executables and test binaries ---
+main
+reader
+
+# --- Keep only source and config files ---
+!*.c
+!*.h
+!*.txt
+!CMakeLists.txt
